@@ -2,6 +2,7 @@ from __future__ import print_function
 import pyzbar.pyzbar as pyzbar
 import numpy as np
 import cv2
+import time
  
 def decode(im) : 
   # Find barcodes and QR codes
@@ -9,6 +10,7 @@ def decode(im) :
  
   # Print results
   for obj in decodedObjects:
+    continue
     print('Type : ', obj.type)
     print('Data : ', obj.data,'\n')
      
@@ -43,9 +45,8 @@ def display(im, decodedObjects):
    
 # Main 
 if __name__ == '__main__':
- 
-  # Read image
-  im = cv2.imread('qr_box.jpg')
- 
+  start = time.time()
+  im = cv2.imread('./test_img/mat0.jpg')
+  print(time.time() - start)
   decodedObjects = decode(im)
   display(im, decodedObjects)
