@@ -62,29 +62,44 @@ class QR_Code(object):
         self.valid = False
         self.qr_data = None
 
-    def calc(self,grey,binary,test=None):
-        self.calc_points(binary)
-        self.qr_detect(grey)
+    def _other(self,id):
+        if id == 0:return (1,2)
+        if id == 1:return (0,2)
+        if id == 2:return (0,1)
 
-    def calc_points(self,binary):
-        if not self.valid:
-            return
-        # find the top left finder
-        distance1 = np.linalg.norm(self.finders[0].center - self.finders[1].center)
-        distance2 = np.linalg.norm(self.finders[0].center - self.finders[2].center)
-        distance3 = np.linalg.norm(self.finders[1].center - self.finders[2].center)
-        if distance1 > distance2 and distance1 > distance3:
-            top_left_id = 2
-            side1,side2 = [0,1]
-        elif distance2 > distance1 and distance2 > distance3:
-            top_left_id = 1
-            side1,side2 = [0,2]
+    def calc(self,grey,binary,test=None):
+        if self.valid:
+            top_left_id = self.calc_points(binary)
+            if self.qr_detect(grey):
+                return
+            
+            self.calc_points(binary,self._other(top_left_id)[0])
+            if self.qr_detect(grey):
+                return
+
+            self.calc_points(binary,self._other(top_left_id)[1])
+            if self.qr_detect(grey):
+                return
+
+    def calc_points(self,binary,assigned_top_left_id = None):
+        if assigned_top_left_id == None:
+            # We try to guess the id of top left finder
+            distance1 = np.linalg.norm(self.finders[0].center - self.finders[1].center)
+            distance2 = np.linalg.norm(self.finders[0].center - self.finders[2].center)
+            distance3 = np.linalg.norm(self.finders[1].center - self.finders[2].center)
+            if distance1 > distance2 and distance1 > distance3:
+                top_left_id = 2
+            elif distance2 > distance1 and distance2 > distance3:
+                top_left_id = 1
+            else:
+                top_left_id = 0
         else:
-            top_left_id = 0
-            side1,side2 = [1,2]
+            top_left_id = assigned_top_left_id
+    
         self.finder_base = self.finders[top_left_id]
-        self.finder_side1 = self.finders[side1]
-        self.finder_side2 = self.finders[side2]
+        self.finder_side1 = self.finders[self._other(top_left_id)[0]]
+        self.finder_side2 = self.finders[self._other(top_left_id)[1]]
+
         self.center = (self.finder_side1.center + self.finder_side2.center)/2
         self.finder_oppo_guess = self.center *2 - self.finders[top_left_id].center
 
@@ -128,6 +143,8 @@ class QR_Code(object):
         bonding_box2 = [[self.top_left2],[self.top_right2],[self.bottom_right2],[self.bottom_left2]]
         self.bonding_box2 = np.array(bonding_box2,dtype=np.int)
 
+        return top_left_id
+
     def add_finder(self,finder):
         if cv2.pointPolygonTest(self.contour,tuple(finder.center),False) >= 0:
             self.finders.append(finder)
@@ -160,11 +177,8 @@ class QR_Code(object):
             cv2.line(image,n2t(self.finder_side1.center),n2t(self.finder_side2.center),color,1)
 
     def qr_detect(self,image):
-        if not self.valid:
-            return False
-        
         # try to recognize the qrcode using different warp size
-        for warp_size in range(150,251,50):
+        for warp_size in range(100,251,50):
             pts1 = np.float32([self.top_left2,self.top_right2,self.bottom_left2,self.bottom_right2])
             pts2 = np.float32([[0,0],[0,warp_size],[warp_size,0],[warp_size,warp_size]])
             M = cv2.getPerspectiveTransform(pts1,pts2)
@@ -191,9 +205,6 @@ def qr_code_detect(src):
     finder_contours, hierarchy = cv2.findContours(binary,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     hierarchy = hierarchy[0]
 
-    cv2.imshow('canny',canny)
-    cv2.imshow('binary',binary)
-
     # find the course area of the qrcode
     QR_Codes = []
     for contour in qr_contours:
@@ -211,7 +222,7 @@ def qr_code_detect(src):
         width,height = rect[1]
         if width == 0 or height == 0 or width > img_width/2 or height > img_height/2:
             continue
-        cv2.drawContours(process2,[contour],-1,(0,255,0))
+
         #this is not father
         if hierarchy[father_id][2] == -1:
             continue
@@ -250,6 +261,7 @@ def qr_code_detect(src):
         if qr_code.qr_data != None:
             success += 1
     
+    return
     for index,qr_code in enumerate(QR_Codes):
         color = (255,0,0)
         color_err = (0,0,255)
@@ -272,7 +284,7 @@ def qr_code_detect(src):
                 finder.draw(src)
 
     cv2.imshow("process1",process1)
-    cv2.imshow("process2",process2)
+    #cv2.imshow("process2",process2)
     cv2.imshow("src",src)
     return success
 
@@ -280,14 +292,13 @@ if __name__ == '__main__':
     #cam = cv2.VideoCapture(0)
     #cam = cv2.VideoCapture('WIN_20190117_14_21_00_Pro.mp4')
     #while True:
-    #for fn in ['./test_img/real2.jpg','./test_img/qr_map7x5.png','./test_img/mat0.jpg','./test_img/mat1.jpg']:
-    for fn in ['./test_img/diff1.jpg','./test_img/diff2.jpg','./test_img/diff3.jpg','./test_img/diff4.jpg']:
+    for fn in ['./test_img/mat0.jpg','./test_img/mat1.jpg','./test_img/qr_map7x5.png']:
+    #for fn in ['./test_img/diff1.jpg','./test_img/diff2.jpg','./test_img/diff3.jpg','./test_img/diff4.jpg']:
         frame = cv2.imread(fn,1)
         #ret, frame = cam.read()
-        if 0 == qr_code_detect(frame.copy()):
-            #cv2.imwrite('buggy.jpg',frame)
-            if 27 == cv2.waitKey(0):
-                break
+        start = time.time()
+        qr_code_detect(frame)
+        print((time.time()-start)*1000)
         if 27 == cv2.waitKey(0):
             break
     #cam.release()
