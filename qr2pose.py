@@ -281,7 +281,7 @@ if __name__ == '__main__':
     #cam = cv2.VideoCapture('WIN_20190117_14_21_00_Pro.mp4')
     #while True:
     #for fn in ['./test_img/real2.jpg','./test_img/qr_map7x5.png','./test_img/mat0.jpg','./test_img/mat1.jpg']:
-    for fn in ['./test_img/diff1.jpg','./test_img/diff2.png','./test_img/diff3.jpg','./test_img/diff4.jpg']:
+    for fn in ['./test_img/diff1.jpg','./test_img/diff2.jpg','./test_img/diff3.jpg','./test_img/diff4.jpg']:
         frame = cv2.imread(fn,1)
         #ret, frame = cam.read()
         if 0 == qr_code_detect(frame.copy()):
