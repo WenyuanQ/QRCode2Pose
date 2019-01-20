@@ -111,9 +111,7 @@ class QR_Code(object):
         self.top_left = self.finder_base.calc_corner(self.center)
         self.top_right = self.finder_right.calc_corner(self.center)
         self.bottom_left = self.finder_down.calc_corner(self.center)
-        bottom_right1 = self.center * 2 - self.top_left
-        bottom_right2 = (self.top_right - self.top_left) + (self.bottom_left - self.top_left) + self.top_left
-        self.bottom_right_guess = (bottom_right1+bottom_right2)/2
+        self.bottom_right_guess = self.center * 2 - self.top_left
 
         # Tested! this is faster than last version
         """best_criteria = 0
@@ -126,8 +124,8 @@ class QR_Code(object):
                 best_criteria = criteria
                 best_index = index
         self.bottom_right = self.contour[best_index][0]"""
-
         self.bottom_right = self.bottom_right_guess
+        
         # define the bonding box
         bonding_box = [[self.top_left],[self.top_right],[self.bottom_right],[self.bottom_left]]
         self.bonding_box = np.array(bonding_box,dtype=np.int)
@@ -262,7 +260,7 @@ def qr_code_detect(src):
         qr_code.calc(gray,binary)
         if qr_code.qr_data != None:
             success += 1
-    return success
+    #return success
     
     color = (100,255,0)
     color_err = (0,0,255)
@@ -290,19 +288,19 @@ def job():
     #cam = cv2.VideoCapture(0)
     #cam = cv2.VideoCapture('WIN_20190117_14_21_00_Pro.mp4')
     #while True:
-    for fn in ['mat0.jpg','mat1.jpg','qr_map7x5.png']:
-    #for fn in ['diff1.jpg','fail4.jpg','fail1.jpg','fail2.jpg','fail3.jpg']:
+    #for fn in ['mat0.jpg','mat1.jpg','qr_map7x5.png']:
+    for fn in ['qr_box.jpg','diff1.jpg','fail1.jpg','fail2.jpg','fail3.jpg']:
         frame = cv2.imread('./test_img/'+fn,1)
         #ret, frame = cam.read()
         success = qr_code_detect(frame.copy())
         #if success == 0:
         #    cv2.imwrite('fail.jpg',frame)
         #print(success)
-        #if 27 == cv2.waitKey(0):
-        #    break
+        if 27 == cv2.waitKey(0):
+            break
     #cam.release()
 
 if __name__ == '__main__':
-    import cProfile
-    cProfile.run('for i in range(0,10):job()',filename='profile.cprof')
-    #job()
+    #import cProfile
+    #cProfile.run('for i in range(0,10):job()',filename='profile.cprof')
+    job()

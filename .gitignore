@@ -102,3 +102,4 @@ venv.bak/
 
 # mypy
 qr_code/
+profile.cprof
