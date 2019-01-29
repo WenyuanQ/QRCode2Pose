@@ -288,8 +288,8 @@ def job():
     #cam = cv2.VideoCapture(0)
     #cam = cv2.VideoCapture('WIN_20190117_14_21_00_Pro.mp4')
     #while True:
-    #for fn in ['mat0.jpg','mat1.jpg','qr_map7x5.png']:
-    for fn in ['qr_box.jpg','diff1.jpg','fail1.jpg','fail2.jpg','fail3.jpg']:
+    for fn in ['mat0.jpg','mat1.jpg','qr_map7x5.png']:
+    #for fn in ['qr_box.jpg','diff1.jpg','fail1.jpg','fail2.jpg','fail3.jpg']:
         frame = cv2.imread('./test_img/'+fn,1)
         #ret, frame = cam.read()
         success = qr_code_detect(frame.copy())

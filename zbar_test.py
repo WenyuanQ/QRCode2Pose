@@ -46,7 +46,7 @@ def display(im, decodedObjects):
 # Main 
 if __name__ == '__main__':
   start = time.time()
-  im = cv2.imread('./test_img/diff1.jpg')
+  im = cv2.imread('./test_img/qr_box.jpg')
   print(time.time() - start)
   decodedObjects = decode(im)
   display(im, decodedObjects)
